@@ -11,9 +11,7 @@
             <div class="content">
                 <!-- 使用ref将上面两个高度包裹住 -->
                 <div ref="banref">
-                    <div class="banner">
-                        <img src="@/assets/images/1.png">
-                    </div>
+                    <home-swiper :banner="banner"></home-swiper>
                     <!-- 用属性的方式将信息传给组件 -->
                     <recommend-view :recommends="recommends"></recommend-view>
                 </div>
@@ -22,6 +20,8 @@
                 <goods-list :goods="showGoods"></goods-list>
             </div>
         </div>
+        <!-- 返回顶部 -->
+        <back-top @backT="backT" v-show="backShow"></back-top>
     </div>
 
 </template>
@@ -40,6 +40,10 @@ import TabControl from "@/components/content/tabControl/TabControl.vue";
 //引入滚动组件
 import BScroll from "better-scroll";
 import { setTimeout } from "core-js";
+//引入返回顶部组件
+import BackTop from "@/components/common/backTop/BackTop.vue";
+//vant轮播图组件
+import HomeSwiper from "./ChildComps/HomeSwiper.vue";
 
 export default {
     name: 'Home',
@@ -69,11 +73,22 @@ export default {
         let tabShow = ref(false)
         //声明ref变量
         let banref = ref(null)
+
+        //初始化为false
+        let backShow = ref(false)
+
+        //轮播图
+        let banner = ref([])
+
         onMounted(() => {
             getHomeAllData().then((res) => {
                 // console.log(res)
                 //将请求数据传给ref响应式数组
                 recommends.value = res.goods.data
+
+                //获取轮播图数据
+                banner.value = res.slides
+                // console.log(res.slides)
             }),
 
                 //热销
@@ -102,9 +117,9 @@ export default {
                     // console.log(position.y);
                     //banref.value.offsetHeight偏移量
                     if(-position.y>banref.value.offsetHeight){
-                        tabShow.value = true
+                        backShow.value=tabShow.value = true
                     }else{
-                        tabShow.value = false
+                        backShow.value=tabShow.value = false
                     }
                 });
 
@@ -148,13 +163,23 @@ export default {
             });
         });
 
-        return { recommends, tabClick, temid, goods, showGoods,tabShow,banref }
+        const backT = ()=>{
+            bs.scrollTo(0,0,500)
+        }
+
+        return {
+             recommends, tabClick, temid, goods, 
+             showGoods,tabShow,banref,backShow,backT, 
+             banner
+            }
     },
     components: {   //添加组件
+        HomeSwiper,
         NavBar,
         RecommendView,
         TabControl,
-        GoodsList
+        GoodsList,
+        BackTop
     }
 }
 </script>

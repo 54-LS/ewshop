@@ -1220,7 +1220,191 @@ bs.on('scroll', (position) => {
 
 
 
+#### （六）、回到顶部组件制作
 
+*第一步：*在common—backTop—BackTop.vue创建,并更改样式
+
+```vue
+<template>
+    <div class="backTop"></div>
+</template>
+
+<script>
+    export default {
+        name:'BackTop',
+    }
+</script>
+
+<style scoped>
+    .backTop{
+        height: 30px;
+        width: 30px;
+        position: fixed;
+        bottom: 80px;
+        right: 30px;
+        border: #D82008 2px solid;
+        z-index: 20;
+        border-radius: 50%;
+        box-shadow: 3px 3px 3px #888;
+        background: #fcfcfc url('~assets/images/up.png') no-repeat center center;
+    }
+</style>
+```
+
+*第二步：*  Home.vue导入组件并使用
+
+```js
+//第一步：引入组件并注册
+import BackTop from "@/components/common/backTop/BackTop.vue";
+
+//第二步：什么时候出现
+	<back-top v-show="backShow"></back-top>
+    //创建变量初始化为false
+    let backShow = ref(false)
+    if(-position.y>banref.value.offsetHeight){
+    	backShow.value=tabShow.value = true
+    }else{
+        backShow.value=tabShow.value = false
+    }
+    
+//第三步：添加点击事件
+	//在子组件中
+	<div class="backTop" @click="backT"></div>
+    setup(props,{emit}) {
+        return { 
+            backT:()=>{
+                emit('backT')
+            }
+         }
+     }
+
+	//父组件
+	<back-top @backT="backT" v-show="backShow"></back-top>
+	const backT = ()=>{
+        bs.scrollTo(0,0,500)
+    }
+## 注意方法使用都需要return返回出去
+```
+
+
+
+#### （七）、原keep-alive
+
+防止服务器更新频繁
+
+```vue
+<!-- <router-view/> -->
+  <router-view v-slot="{ Component }">
+    <transition>
+      <keep-alive>
+        <component :is="Component" />
+      </keep-alive>
+    </transition>
+  </router-view>
+```
+
+
+
+#### （八）、vant组件库的使用
+
+https://vant4.ylhtest.com/#/zh-CN
+
+*第一步：*下载vant并安装插件
+	vue3安装:`npm i vant`
+	插件:`npm i unplugin-vue-components -D`
+
+```js
+//在vue-cli中vue.config.js使用插件
+const { VantResolver } = require('unplugin-vue-components/resolvers');
+const ComponentsPlugin = require('unplugin-vue-components/webpack');
+
+module.exports = {
+  configureWebpack: {
+    plugins: [
+      ComponentsPlugin({
+        resolvers: [VantResolver()],
+      }),
+    ],
+  },
+};
+
+```
+
+*第二步：*使用轮播图要导入
+在main.js中`import { Swipe, SwipeItem } from 'vant';`
+`createApp(App).use(Swipe).use(SwipeItem)`
+
+*第三步：*新建子组件HomeSwiper.vue
+
+Home.vue父组件
+```js
+//第一步：引入注册后使用组件
+<home-swiper :banner="banner"></home-swiper>
+
+//第二步：使用banner
+let banner = ref([])
+getHomeAllData().then((res) => {
+    //获取轮播图数据
+    banner.value = res.slides
+    console.log(res.slides)
+}),
+```
+
+HomeSwiper.vue
+```vue
+<template>
+    <van-swipe :v-if="banner.length" class="my-swipe" :autoplay="3000" indicator-color="white">
+        <van-swipe-item v-for="(item,index) in banner" :key="index">
+            <img :src="item.img_url">
+        </van-swipe-item>
+    </van-swipe>
+</template>
+
+<script>
+export default {
+    name:'HomeSwiper',
+    props:{
+        banner:{
+            type:Array,
+            default() {
+                return []
+            }
+        }
+    }
+}
+</script>
+
+<style scoped>
+img{
+    width: 100%;
+    height: auto;
+}
+</style>
+```
+
+
+
+vant组件库中的懒加载和勋章
+```js
+//懒加载
+import { Lazyload } from 'vant';
+createApp(App).use(Lazyload,{
+    loading:require('./assets/images/default.png')  //默认加载的图片
+})
+//所有图片的src都可换成v-lazy，不需要加冒号；
+
+//勋章
+import { Badge } from 'vant';
+createApp(App).use(Badge)
+//购物车
+<router-link class="tab-bar-item" to="/shopcart">
+  <van-badge :content="2" max="9" :offset="['4px','3px']">
+    <div class="icon"><i class="iconfont icon-gouwuche"></i></div>
+  </van-badge>
+  <div>购物车</div>
+</router-link>
+
+```
 
 
 

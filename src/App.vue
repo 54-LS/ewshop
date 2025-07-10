@@ -1,6 +1,15 @@
 <template>
   
-  <router-view/>
+  <!-- <router-view/> -->
+  <router-view v-slot="{ Component }">
+    <transition>
+      <keep-alive>
+        <component :is="Component" />
+      </keep-alive>
+    </transition>
+  </router-view>
+
+
 
   <div id="nav">
     <router-link class="tab-bar-item" to="/">
@@ -12,7 +21,9 @@
       <div>分类</div>
     </router-link>
     <router-link class="tab-bar-item" to="/shopcart">
-      <div class="icon"><i class="iconfont icon-gouwuche"></i></div>
+      <van-badge :content="2" max="9" :offset="['4px','3px']">
+        <div class="icon"><i class="iconfont icon-gouwuche"></i></div>
+      </van-badge>
       <div>购物车</div>
     </router-link>
     <router-link class="tab-bar-item" to="/profile">
