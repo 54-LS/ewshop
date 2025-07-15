@@ -82,7 +82,7 @@ export default {
 
         onMounted(() => {
             getHomeAllData().then((res) => {
-                // console.log(res)
+                console.log('res:',res)
                 //将请求数据传给ref响应式数组
                 recommends.value = res.goods.data
 
@@ -103,7 +103,7 @@ export default {
                 getHomeGoods('new').then((res) => {
                     goods.new.list = res.goods.data
                 })
-
+            console.log('goods:',goods)
             // 使用 setTimeout 确保 DOM 更新完成后再初始化 BetterScroll
             setTimeout(() => {
                 let wrapper = document.querySelector('.wrapper');
@@ -124,7 +124,7 @@ export default {
                 });
 
                 //使用ref所对应的元素
-                console.log(banref.value)
+                // console.log(banref.value)
 
                 bs.on('pullingUp',()=>{
                     const page = goods[currentType.value].page+1;

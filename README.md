@@ -1408,6 +1408,315 @@ createApp(App).use(Badge)
 
 
 
+## 三、项目制作分类页面
+
+#### （一）、分类页面样式搭建
+
+```html
+//结构搭建
+<div id="mainbox">
+    <div class="ordertab">
+		//顶部栏
+    </div>
+    <div class="leftmenu">
+		//左边菜单栏
+    </div>
+    <div class="goodslist">
+		//商品列表
+    </div>
+</div>
+```
+
+```scss
+//样式 
+#mainbox{
+    display:flex;
+    position: relative;
+    .ordertab{
+        position: absolute;
+        height: 50px;
+        top: 45px;
+        left: 130px;
+        right: 0;
+        background-color: red;
+    }
+    .leftmenu{
+        width: 130px;
+        height: 300px;
+        background-color: green;
+        position: absolute;
+        top: 95px;
+        left: 0;
+    }
+    .goodslist{
+        flex: 1;
+        position: absolute;
+        top: 100px;
+        left: 130px;
+        right: 0;
+        background-color: blue;
+        height: 100vh;
+    }
+}
+```
+
+
+
+#### （二）、左侧下拉列表制作
+
+*第一步：*请求数据category.js
+
+```js
+import { request } from "./request";
+
+//得到首页所有数据
+export function getCategory(){
+    return request({
+        url:'/api/goods'
+    })
+}
+```
+
+*第二步：*导入并使用vant组件
+
+```js
+//第一步：折叠面板
+    import { Collapse, CollapseItem } from 'vant';
+    .use(Collapse).use(CollapseItem)
+    //结构搭建
+    <div class="leftmenu">
+        <van-collapse v-model="activeName" accordion>
+            <van-collapse-item v-for="item in categories.slice(0,5)" :key="item.id"
+            :title="item.name" :name="item.name">
+
+            </van-collapse-item>
+        </van-collapse>
+    </div>
+	setup(){
+        //手风琴折叠面板
+        const activeName = ref('1');
+        let categories = ref([])  //商品分类
+
+        getCategoryData().then(res=>{
+            categories.value = res.categories
+        })
+
+        return { activeName,categories }
+    }
+
+//第二步：侧边导航
+	import { Sidebar, SidebarItem } from 'vant';
+	const active = ref(0);
+<van-sidebar class="leftmenu" v-model="active">
+    <van-collapse v-model="activeName" accordion>
+        <van-collapse-item v-for="item in categories.slice(0,5)" :key="item.id"
+        :title="item.name" :name="item.name">
+            <van-sidebar-item v-for="son in item.children" :key="son.id" :title="son.name" />
+        </van-collapse-item>
+    </van-collapse>
+</van-sidebar>
+	//删除.leftmenu{height:300px}
+
+```
+
+
+
+#### （三）、点击页面切换动作
+
+引入首部组件并注册
+`import { Tab, Tabs } from 'vant';`
+
+```js
+<div class="ordertab">
+    <van-tabs v-model:active="activeTab" @click-tab="onClickTab">
+        <van-tab title="销量排序"></van-tab>
+        <van-tab title="价格排序"></van-tab>
+        <van-tab title="评论排序"></van-tab>
+    </van-tabs>
+</div>
+
+//点击事件
+const active = ref(0);
+const activeTab = ref(2);
+let currentOrder = ref('sales')//排序索引
+let currentId = ref(0) //侧边导航索引
+const onClickTab = (index)=>{
+    const orders = ['sales','price','comments_count']
+    currentOrder.value = orders[index.name]
+    // //测试
+    // console.log('排序类型：'+currentOrder.value)
+    // console.log('分类序号：'+currentId.value)
+}
+
+//侧边栏事件
+<van-sidebar class="leftmenu" v-model="active" @change="leftClickTab">
+const leftClickTab = (cid)=>{
+    currentId.value = cid;
+    // //测试
+    // console.log('排序类型：'+currentOrder.value)
+    // console.log('分类序号：'+currentId.value)
+}
+```
+
+#### （四）、页面交互
+
+```js
+//第一步：请求方法
+export function getCategoryDataGoods(order='sales',cid=0,page=1){
+    return request({
+        url:`/api/goods?category_id=${cid}&page=${page}&${order}=1`
+    })
+}
+
+//第二步：创建数据类型存放商品分类值
+//数据模型
+const goods = reactive({  //存储数据
+    sales:{page:1,list:[]},
+    price:{page:1,list:[]},
+    comments_count:{page:1,list:[]}
+})
+
+//第三步：初始化函数
+let init = ()=>{
+    getCategoryDataGoods('sales',currentId.value).then(res=>{
+        goods.sales.list = res.goods.data
+    })
+    getCategoryDataGoods('price',currentId.value).then(res=>{
+        goods.price.list = res.goods.data
+    })
+    getCategoryDataGoods('comments_count',currentId.value).then(res=>{
+        goods.comments_count.list = res.goods.data
+    })
+}
+
+//第四步：点击就调用初始化函数
+onMounted(()=>{
+    init();
+})
+const onClickTab = (index)=>{
+    getCategoryDataGoods(currentOrder.value,currentId.value).then(res=>{
+        goods[currentOrder.value].list = res.goods.data
+    })
+}
+const leftClickTab = (cid)=>{
+    init();
+}
+
+//第五步：使用计算属性将值传到页面使用
+const showGoods = computed(()=>{
+    return goods[currentOrder.value].list
+})
+
+//第六步：页面使用数据
+<div class="goodslist">
+    <van-swipe-cell  v-for="item in showGoods" :key="item.id">
+        <van-card
+            :num="item.sales"
+            :price="item.price"
+            :title="item.title"
+            :thumb="item.cover_url"
+        />
+    </van-swipe-cell>
+</div>
+```
+
+
+
+#### （五）、滑动加载和返回顶部
+
+*根据首页样式制作*
+
+```js
+//第一步：滚动加载
+import BScroll from "better-scroll";
+let bs;
+onMounted(()=>{
+
+    let goodslist = document.querySelector('.goodslist');
+    bs = new BScroll(goodslist, {
+        probeType: 3,
+        click: true,
+        pullUpLoad: true
+    });
+
+    bs.on('pullingUp',()=>{
+        const page = goods[currentOrder.value].page+1;
+        //分页数据
+        getCategoryDataGoods(goods[currentOrder.value],currentId.value,page).then(res=>{
+            goods[currentOrder.value].list.push(...res.goods.data)
+            goods[currentOrder.value].page+=1
+        })
+
+        //完成上拉，等数据请求完成，新数据展示
+        bs.finishPullUp();
+        //重新计算高度
+        bs.refresh()
+        console.log('当前类型'+currentOrder.value+'页数'+page)
+        console.log(document.querySelector('.content').clientHeight)
+
+    })
+
+})
+
+//第二步：返回顶部
+import BackTop from "@/components/common/backTop/BackTop.vue";
+<back-top @backT="backT" v-show="backShow"></back-top>
+const backT = ()=>{
+    bs.scrollTo(0,0,500)
+}
+//返回顶部
+let backShow = ref(false)
+bs.on('scroll', (position) => {
+    const one = document.querySelector('.one')
+    if(-position.y>(one.offsetHeight)*4-90){
+        backShow.value = true
+    }else{
+        backShow.value = false
+    }
+});
+```
+
+
+
+#### （六）、商品详情[路由器]
+
+*第一步：*给分类商品添加详情
+
+```js
+//添加点击事件
+<van-card class="one" @click="clickitem(item.id)"/>
+
+//引入路由并使用
+import { useRouter } from "vue-router";
+const router = useRouter()
+return {
+    clickitem:(id)=>{
+        router.push({path:'/detail',query:{id}})
+    }
+}
+```
+
+*第二步：*给首页推荐商品添加点击事件详情
+
+```js
+//GoodsListItem.vue中添加点击事件
+<div class="goods-item" @click="clickitem"></div>
+
+//引路由并使用
+import { useRouter } from 'vue-router';
+setup(props){
+    const router = useRouter();
+    const clickitem = ()=>{
+        router.push({path:'/detail',query:{id:props.product.id}})
+    }
+    return { clickitem }
+}
+```
+
+
+
+
+
 
 
 

@@ -1,13 +1,13 @@
 <template>
   
-  <!-- <router-view/> -->
-  <router-view v-slot="{ Component }">
+  <router-view/>
+  <!-- <router-view v-slot="{ Component }">
     <transition>
       <keep-alive>
         <component :is="Component" />
       </keep-alive>
     </transition>
-  </router-view>
+  </router-view> -->
 
 
 
@@ -16,7 +16,7 @@
       <div class="icon"><i class="iconfont icon-shouye"></i></div>
       <div>首页</div>
     </router-link> 
-    <router-link class="tab-bar-item" to="/category">
+    <router-link class="tab-bar-item" to="/category" >
       <div class="icon"><i class="iconfont icon-sort"></i></div>
       <div>分类</div>
     </router-link>
